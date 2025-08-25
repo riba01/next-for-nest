@@ -4,9 +4,9 @@ export type LoginType = Omit<LoginModel, 'updatedAt'>;
 
 export const makePartialLogin = (params?: Partial<LoginModel>): LoginType => {
   return {
-    id: params?.id || '',
+    id: params?.id || 0,
     username: params?.username || '',
-    password_hash: params?.password_hash || '',
+    passwordHash: params?.passwordHash || '',
     createdAt: params?.createdAt || '',
   };
 };

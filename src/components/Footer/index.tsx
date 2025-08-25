@@ -11,7 +11,7 @@ export function Footer() {
         </span>
         <Link href={'/'}>The Blog - </Link>
       </p>
-      <Link href={'/admin/login'} className='flex items-center gap-2'>
+      <Link href={'/login'} className='flex items-center gap-2'>
         Admin <LogInIcon size={14} />
       </Link>
     </footer>
