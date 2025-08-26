@@ -19,8 +19,12 @@ export function CreateUserForm() {
 
   useEffect(() => {
     toast.dismiss();
-    if (state.errors.length > 0) {
+    console.log(state);
+    if (state.errors.length > 0 && state.success === false) {
       state.errors.forEach(error => toast.error(error));
+    }
+    if (state.success) {
+      state.errors.forEach(msg => toast.success(msg));
     }
   }, [state]);
 
