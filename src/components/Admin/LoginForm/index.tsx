@@ -2,6 +2,7 @@
 import clsx from 'clsx';
 import { LogInIcon } from 'lucide-react';
 import { Metadata } from 'next';
+import Link from 'next/link';
 import { useActionState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { loginAction } from '../../../actions/login/login-action';
@@ -59,6 +60,9 @@ export default function LoginForm() {
               Entrar
             </Buttom>
           </div>
+          <p className='my-4 text-sm/tight'>
+            <Link href={'/user/new'}>Criar minha conta</Link>
+          </p>
         </div>
       </form>
     </div>

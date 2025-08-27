@@ -5,7 +5,9 @@ import {
   PublicUserDto,
   PublishUserSchema,
 } from '@/lib/user/schemas';
+import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { apiRequest } from '../../utils/api-request';
 import { getZodErrorMessages } from '../../utils/get-zod-error-messages';
 
 type CreateUserActionState = {
@@ -38,37 +40,21 @@ export async function createUserAction(
   }
 
   //FETCH PARA CRIAR O USUÁRIO NA API
-  const apiURL = process.env.API_URL || 'http://localhost:3001';
-  try {
-    const response = await fetch(`${apiURL}/user`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(parseFormData.data),
-    });
-    console.log(response);
-    if (!response.ok) {
-      const data = await response.json();
-      return {
-        user: PublishUserSchema.parse(formDataObj),
-        errors: [data.status, data.statusText || 'Erro ao criar usuário'],
-        success: false,
-      };
-    }
+  const createResponse = await apiRequest<PublicUserDto>('/user', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(parseFormData.data),
+  });
 
+  if (!createResponse.success) {
     return {
       user: PublishUserSchema.parse(formDataObj),
-      errors: ['Seu usuário foi criado com sucesso!'],
-      success: true,
-    };
-  } catch (e) {
-    console.log(e);
-
-    return {
-      user: PublishUserSchema.parse(formDataObj),
-      errors: ['Falha ao conectar com o servidor. Usuário não foi criado.'],
-      success: false,
+      errors: createResponse.errors || ['Erro ao criar usuário'],
+      success: createResponse.success,
     };
   }
+
+  redirect('/login?created=1');
 }
