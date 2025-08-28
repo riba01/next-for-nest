@@ -15,13 +15,13 @@ export const metadata: Metadata = {
 
 export default function LoginForm() {
   const initialState = {
-    username: '',
-    error: '',
+    email: '',
+    errors: [],
   };
   const [state, action, isPending] = useActionState(loginAction, initialState);
   useEffect(() => {
-    if (state.error) {
-      toast.error(state.error);
+    if (state.errors.length > 0) {
+      state.errors.forEach(error => toast.error(error));
     }
   }, [state]);
   return (
@@ -36,11 +36,12 @@ export default function LoginForm() {
       <form action={action}>
         <div className='mx-auto my-10 flex max-w-sm flex-col items-center gap-4'>
           <InputText
-            labelText='Usuário'
-            name='username'
-            placeholder='Digite seu usuário'
-            type='text'
+            labelText='Email'
+            name='email'
+            placeholder='Digite seu email'
+            type='email'
             disabled={isPending}
+            required
           />
           <InputText
             labelText='Senha'
@@ -48,6 +49,7 @@ export default function LoginForm() {
             name='password'
             placeholder='Digite sua senha'
             disabled={isPending}
+            required
           />
           <div className='flex'>
             <Buttom

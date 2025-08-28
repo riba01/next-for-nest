@@ -1,76 +1,60 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import {
-  createLoginSession,
-  verifyPassword,
-} from '../../lib/login/manage-login';
-import { loginRepository } from '../../models/login';
+import z from 'zod';
+import { createLoginSessionFromApi } from '../../lib/login/manage-login';
+import { LoginSchema } from '../../lib/login/schemas';
+import { apiRequest } from '../../utils/api-request';
 import { asyncDelay } from '../../utils/async-delay';
+import { getZodErrorMessages } from '../../utils/get-zod-error-messages';
 
 type LoginActionProps = {
-  username: string;
-  error: string;
+  email: string;
+  errors: string[];
 };
 
 export async function loginAction(state: LoginActionProps, formData: FormData) {
   const allowLogin = Boolean(Number(process.env.ALLOW_LOGIN));
   if (!allowLogin) {
     return {
-      username: '',
-      error: 'Login not allowed',
+      email: '',
+      errors: ['Login not allowed'],
     };
   }
 
   await asyncDelay(2000, true);
   if (!(formData instanceof FormData)) {
     return {
-      username: '',
-      error: 'Dados inválidos',
+      email: '',
+      errors: ['Dados inválidos'],
     };
   }
+  //Validar
+  const formDataObj = Object.fromEntries(formData.entries());
+  const formEmail = formDataObj?.email?.toString() || '';
+  const parseFormData = LoginSchema.safeParse(formDataObj);
 
-  const username = formData.get('username')?.toString() || '';
-  const password = formData.get('password')?.toString() || '';
-
-  if (!username || !password) {
+  if (!parseFormData.success) {
     return {
-      username: username,
-      error: 'Informe seu usuário e senha',
+      email: formEmail,
+      errors: getZodErrorMessages(z.treeifyError(parseFormData.error)),
     };
   }
-  //Aqui eu checo se o usuário existe na base de dados
-  /*   const isUserNameValid = username === process.env.LOGIN_USER; */
-  const isUserNameValid = await loginRepository
-    .findByUser(username)
-    .catch(() => undefined);
 
-  /*  console.log(isUserNameValid?.username); */
-
-  if (!isUserNameValid) {
+  const createLogin = await apiRequest<{ accessToken: string }>('/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(parseFormData.data),
+  });
+  if (!createLogin.success) {
     return {
-      username: username,
-      error: 'Ficou aqui',
+      email: formEmail,
+      errors: ['Erro ao fazer login, tente novamente'],
     };
   }
 
-  const hashPassword = isUserNameValid.passwordHash;
-
-  if (!hashPassword || typeof hashPassword !== 'string') {
-    throw new Error('Hash da senha não está definido!');
-  }
-
-  /*  console.log(hashPassword); */
-
-  const isPasswordValid = await verifyPassword(password, hashPassword);
-
-  if (!isPasswordValid) {
-    return {
-      username: username,
-      error: 'Error ao logar',
-    };
-  }
-
-  await createLoginSession(username);
+  await createLoginSessionFromApi(createLogin.data.accessToken);
   redirect('/admin/post');
 }

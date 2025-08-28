@@ -40,6 +40,20 @@ export async function createLoginSession(username: string) {
     secure: true,
   });
 }
+
+export async function createLoginSessionFromApi(jwt: string) {
+  const expiresAt = new Date(Date.now() + loginExpSeconds * 1000);
+  const loginSession = jwt;
+  const cookieStore = await cookies();
+
+  cookieStore.set(loginCookieName, loginSession, {
+    httpOnly: true,
+    sameSite: 'strict',
+    expires: expiresAt,
+    secure: true,
+  });
+}
+
 export async function deleteLoginSession() {
   const cookieStore = await cookies();
   cookieStore.set(loginCookieName, '', { expires: new Date(0) });
@@ -55,10 +69,26 @@ export async function getLoginSession() {
   return verifyJwt(jwt);
 }
 
+export async function getLoginSessionForApi() {
+  const cookieStore = await cookies();
+
+  const jwt = cookieStore.get(loginCookieName)?.value;
+  if (!jwt || jwt === undefined) return;
+
+  return jwt;
+}
+
 export async function requireLoginSessionRedirect() {
   const isAuthenticated = await verifyLoginSession();
   if (!isAuthenticated) {
-    redirect('/admin/login');
+    redirect('/login');
+  }
+}
+
+export async function requireLoginSessionForApiOrRedirect() {
+  const isAuthenticated = await getLoginSessionForApi();
+  if (!isAuthenticated) {
+    redirect('/login');
   }
 }
 
