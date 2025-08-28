@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { LogInIcon } from 'lucide-react';
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useActionState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { loginAction } from '../../../actions/login/login-action';
@@ -19,6 +20,29 @@ export default function LoginForm() {
     errors: [],
   };
   const [state, action, isPending] = useActionState(loginAction, initialState);
+
+  const router = useRouter();
+  const searcParams = useSearchParams();
+  const userChanged = searcParams.get('userChanged');
+  const created = searcParams.get('created');
+
+  useEffect(() => {
+    if (userChanged === '1') {
+      toast.dismiss();
+      toast.success('Seu usuário foi modificado, faça login novamente');
+      const url = new URL(window.location.href);
+      url.searchParams.delete('userChanged');
+      router.replace(url.toString());
+    }
+    if (created === '1') {
+      toast.dismiss();
+      toast.success('Usuário criado com sucesso, faça login');
+      const url = new URL(window.location.href);
+      url.searchParams.delete('created');
+      router.replace(url.toString());
+    }
+  }, [userChanged, created, router]);
+
   useEffect(() => {
     if (state.errors.length > 0) {
       state.errors.forEach(error => toast.error(error));
