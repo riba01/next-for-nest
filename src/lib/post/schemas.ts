@@ -1,6 +1,7 @@
 import sanitizeHtml from 'sanitize-html';
 import { z } from 'zod';
 import { isUrlOrRelativePath } from '../../utils/is-url-or-relative-path';
+import { PublishUserSchema } from '../user/schemas';
 
 const PostBaseSchema = z.object({
   title: z
@@ -47,3 +48,38 @@ export const PostCreateSchema = PostBaseSchema;
 export const PostUpdateSchema = PostBaseSchema.extend({
   // id: z.string().uuid('ID inválido'),
 });
+
+export const CreatePostForApiSchema = PostBaseSchema.omit({
+  author: true,
+  published: true,
+}).extend({});
+
+export const UpdatePostForApiSchema = PostBaseSchema.omit({
+  author: true,
+}).extend({});
+
+export const PublicPostForApiSchema = PostBaseSchema.extend({
+  id: z.string().default(''),
+  slug: z.string().default(''),
+  title: z.string().default(''),
+  excerpt: z.string().default(''),
+  author: PublishUserSchema.optional().default({
+    id: '',
+    name: '',
+    email: '',
+  }),
+  content: z.string().default(''),
+  coverImageUrl: z.string().default(''),
+  createdAt: z.string().default(''),
+  updatedAt: z.string().default(''),
+}).extend({});
+
+export type CreatePostForApiDto = z.infer<typeof CreatePostForApiSchema>;
+export type UpdatePostForApiDto = z.infer<typeof UpdatePostForApiSchema>;
+export type PublicPostForApiDto = z.infer<typeof PublicPostForApiSchema>;
+
+/* console.log(
+  PublicPostForApiSchema.parse({
+    id: '123',
+  }),
+); */

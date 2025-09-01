@@ -5,8 +5,8 @@ import { redirect } from 'next/navigation';
 import { v7 as uuidV7 } from 'uuid';
 import z from 'zod';
 import { makePartialPublicPost, PublicPost } from '../../dto/post/dto';
-import { verifyLoginSession } from '../../lib/login/verifyLoginSession';
-import { PostCreateSchema } from '../../lib/post/validations';
+import { requireLoginSessionForApiOrRedirect } from '../../lib/login/manage-login';
+import { PostCreateSchema } from '../../lib/post/schemas';
 import { PostModel } from '../../models/post/post-model';
 import { postRepository } from '../../repositories/post';
 import { getZodErrorMessages } from '../../utils/get-zod-error-messages';
@@ -22,7 +22,7 @@ export async function createPostAction(
   prevState: CreatePostActionProps,
   formData: FormData,
 ): Promise<CreatePostActionProps> {
-  const isAuthenticated = await verifyLoginSession();
+  await requireLoginSessionForApiOrRedirect();
 
   /* console.log({ prevState });
   console.log(formData); */
@@ -40,13 +40,6 @@ export async function createPostAction(
   const formDataObj = Object.fromEntries(formData.entries());
 
   const zodParsedObj = PostCreateSchema.safeParse(formDataObj);
-
-  if (!isAuthenticated) {
-    return {
-      formState: makePartialPublicPost(formDataObj),
-      errors: ['Faça login em outra aba do navegador antes de salvar!'],
-    };
-  }
 
   if (!zodParsedObj.success) {
     const errors = getZodErrorMessages(z.treeifyError(zodParsedObj.error));

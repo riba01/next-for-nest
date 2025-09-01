@@ -1,12 +1,12 @@
 'use server';
 import { revalidateTag } from 'next/cache';
-import { requireLoginSessionRedirect } from '../../lib/login/manage-login';
+import { requireLoginSessionForApiOrRedirect } from '../../lib/login/manage-login';
 import { postRepository } from '../../repositories/post';
 
 export async function DeletePostAction(id: string) {
   //TODO: checar se o usuário tem permissap para deletar o post
   //Redireciono diretamente
-  await requireLoginSessionRedirect();
+  await requireLoginSessionForApiOrRedirect();
 
   const postId = id;
 
